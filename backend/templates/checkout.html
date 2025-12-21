@@ -1,0 +1,191 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if product %}Checkout - {{ product.name }} | Skilcart{% else %}Checkout | Skilcart{% endif %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="checkout-body">
+    <!-- Blurred Background -->
+    <div class="checkout-bg" style="background-image: url('https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1974&auto=format&fit=crop');"></div>
+    <div class="checkout-overlay"></div>
+
+    <!-- Main Checkout Card -->
+    <div class="checkout-card">
+        <!-- Header -->
+        <div class="checkout-header">
+            <div class="brand-pill">
+                <i class="fa-solid fa-cart-shopping"></i> SKIL<span>CART</span>
+            </div>
+            <div class="platform-credit">
+                Built with &#10084;&#65039; on Skilcart
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="checkout-content">
+            <!-- Left Column: Product Info -->
+            <div class="product-info-col">
+                {% if error %}
+                <div style="text-align: center; padding: 3rem;">
+                    <h2>Product Not Found</h2>
+                    <p>{{ error }}</p>
+                    <a href="/" style="color: #003a12; text-decoration: underline;">Go back to homepage</a>
+                </div>
+                {% elif product %}
+                <div class="checkout-product-img-wrapper" style="background: linear-gradient(135deg, #1dbf73, #003a12); border-radius: 12px; height: 300px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold; margin-bottom: 30px; overflow: hidden;">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% elif product.image_url %}
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                        {{ product.name }}
+                    {% endif %}
+                </div>
+                
+                <h1 class="checkout-product-title">{{ product.name }}</h1>
+
+                <div class="section-label">ABOUT THE PRODUCT</div>
+                <div class="product-desc-text" style="color: #444; margin-bottom: 20px; line-height: 1.6;">
+                    {{ product.short_description|default:product.description|truncatewords:30 }}
+                </div>
+
+                <div class="section-label">WHAT'S INSIDE</div>
+                <ul class="info-list">
+                    {% if product.what_included %}
+                        {% for item in product.what_included %}
+                        <li>
+                            <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                            <span>{{ item }}</span>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li>
+                            <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                            <span>Instant Download Link via Email</span>
+                        </li>
+                        <li>
+                            <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                            <span>HD Quality Videos without Watermark</span>
+                        </li>
+                        <li>
+                            <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                            <span>Lifetime Access & Updates</span>
+                        </li>
+                        <li>
+                            <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+                            <span>100% Safe & Secure Payment</span>
+                        </li>
+                    {% endif %}
+                </ul>
+                {% else %}
+                <div style="text-align: center; padding: 3rem;">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <p>Loading product information...</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Column: Form & Payment -->
+            <div class="checkout-form-col">
+                {% if product %}
+                <form id="checkoutForm">
+                    <!-- Hidden fields so the form always has product info (no JS required to view it) -->
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <input type="hidden" name="product_slug" value="{{ product.slug }}">
+                    <input type="hidden" name="amount" value="{{ product.price }}">
+
+                    <div class="section-label" style="margin-top: 0;">CONTACT DETAILS</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="checkoutEmail" class="form-input" placeholder="Enter your email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" id="checkoutPhone" class="form-input" placeholder="Enter your mobile number" required>
+                    </div>
+
+                    <!-- Bump Offer -->
+                    <div class="bump-offer">
+                        <div class="bump-thumb" style="background: linear-gradient(45deg, #1774ff, #00c6ff);"></div>
+                        <div class="bump-content">
+                            <div class="bump-title">Add Ultimate Editing Course <span>&#8377;99</span></div>
+                            <div class="bump-desc">One-time offer! Add this pack to skyrocket your growth.</div>
+                        </div>
+                        <div class="bump-add" onclick="this.classList.toggle('active')">
+                            <i class="fa-solid fa-check" style="font-size: 12px;"></i>
+                        </div>
+                    </div>
+
+                    <!-- Price Summary -->
+                    <div class="price-summary">
+                        <div class="price-row">
+                            <span>Subtotal</span>
+                            <span style="text-decoration: line-through;">&#8377;{{ product.original_price|default:product.price }}</span>
+                        </div>
+                        <div class="price-row">
+                            <span>Discount</span>
+                            {% if product.discount_percentage > 0 %}
+                            <span style="color: #4caf50;">{{ product.discount_percentage }}% OFF</span>
+                            {% else %}
+                            <span style="color: #4caf50;">No discount</span>
+                            {% endif %}
+                        </div>
+                        <div class="total-row">
+                            <span>Total Amount</span>
+                            <span>&#8377;{{ product.price }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Button -->
+                    <button type="submit" class="pay-btn">
+                        Make Payment &#8377;{{ product.price }} <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+
+                    <div class="secure-badge">
+                        <i class="fa-solid fa-lock"></i> SSL Secured Payment
+                    </div>
+                </form>
+                {% else %}
+                <div style="padding: 2rem; text-align: center;">
+                    <p>Product not available. Please select a product from the <a href="/">homepage</a>.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- API Client for form submission -->
+    <script src="{% static 'js/api.js' %}"></script>
+    
+    <!-- Setup checkout form -->
+    {% if product %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('checkoutForm');
+            if (form) {
+                const productSlug = '{{ product.slug }}';
+                handleCheckoutForm(form, productSlug);
+            }
+        });
+        
+        // Store product data for form submission
+        window.checkoutProduct = {
+            id: {{ product.id }},
+            slug: '{{ product.slug }}',
+            name: '{{ product.name|escapejs }}',
+            price: {{ product.price }},
+            originalPrice: {{ product.original_price|default:product.price }},
+            discountPercentage: {{ product.discount_percentage }}
+        };
+    </script>
+    {% endif %}
+</body>
+</html>
+

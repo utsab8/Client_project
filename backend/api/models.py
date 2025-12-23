@@ -57,6 +57,12 @@ class Product(models.Model):
     # Media
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     image_url = models.URLField(blank=True, help_text="External image URL if not uploading")
+    payment_qr = models.ImageField(
+        upload_to='payment_qr/',
+        blank=True,
+        null=True,
+        help_text="QR code image to display on payment page"
+    )
     
     # Relationships
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
@@ -86,10 +92,17 @@ class Product(models.Model):
         if not self.slug:
             self.slug = slugify(self.name)
         
-        # Calculate discount percentage if original_price is set
-        if self.original_price and self.price:
+        # Calculate price if original_price and discount_percentage are set
+        if self.original_price and self.discount_percentage:
+            discount_amount = (self.original_price * self.discount_percentage) / 100
+            self.price = self.original_price - discount_amount
+        # Fallback: Calculate discount percentage if price is set instead
+        elif self.original_price and self.price:
             discount = ((self.original_price - self.price) / self.original_price) * 100
             self.discount_percentage = int(discount)
+        # If no original_price, price is the regular price (no discount)
+        elif not self.original_price and self.price:
+            self.discount_percentage = 0
         
         super().save(*args, **kwargs)
 
@@ -105,6 +118,7 @@ class Order(models.Model):
     """Order/Checkout Model"""
     ORDER_STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('verified', 'Verified'),
         ('completed', 'Completed'),
         ('failed', 'Failed'),
         ('cancelled', 'Cancelled'),
@@ -131,6 +145,12 @@ class Order(models.Model):
     # Status
     status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='pending')
     payment_id = models.CharField(max_length=200, blank=True, help_text="Payment gateway transaction ID")
+    payment_screenshot = models.ImageField(
+        upload_to='payment_screenshots/',
+        blank=True,
+        null=True,
+        help_text="Proof of payment uploaded by customer"
+    )
     
     # Download
     download_link = models.URLField(blank=True, help_text="Link sent to customer after payment")
@@ -158,6 +178,17 @@ class SiteSettings(models.Model):
     """Site-wide Settings Model"""
     site_name = models.CharField(max_length=200, default="SKILCART")
     site_tagline = models.CharField(max_length=200, default="Best Digital Product In India")
+    payment_qr_default = models.ImageField(
+        upload_to='payment_qr/',
+        blank=True,
+        null=True,
+        help_text="Default QR shown on payment page when product QR is not set"
+    )
+    privacy_policy = models.TextField(blank=True, default='', help_text="Privacy Policy content")
+    terms_and_conditions = models.TextField(blank=True, default='', help_text="Terms & Conditions content")
+    refund_policy = models.TextField(blank=True, default='', help_text="Refund Policy content")
+    support_email = models.EmailField(default='support@skilcart.com', help_text="Support contact email shown to customers")
+    from_email = models.EmailField(blank=True, default='', help_text="Override sender email for outgoing messages (leave blank to use DEFAULT_FROM_EMAIL)")
     
     # Contact Information
     whatsapp_number = models.CharField(max_length=20, default="919712237383")

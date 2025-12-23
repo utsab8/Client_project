@@ -2,23 +2,129 @@
 const mobileMenuToggle = document.getElementById('mobileMenuToggle');
 const mainNav = document.getElementById('mainNav');
 
-if (mobileMenuToggle) {
-    mobileMenuToggle.addEventListener('click', () => {
-        mainNav.classList.toggle('active');
+// Check if we're on mobile
+const isMobile = () => window.innerWidth <= 768;
 
-        // Animate hamburger icon
-        const spans = mobileMenuToggle.querySelectorAll('span');
-        if (mainNav.classList.contains('active')) {
-            spans[0].style.transform = 'rotate(45deg) translateY(10px)';
-            spans[1].style.opacity = '0';
-            spans[2].style.transform = 'rotate(-45deg) translateY(-10px)';
+if (mobileMenuToggle && mainNav) {
+    // On mobile, show menu by default
+    if (isMobile()) {
+        mainNav.classList.add('active');
+    }
+
+    mobileMenuToggle.addEventListener('click', () => {
+        if (isMobile()) {
+            mainNav.classList.toggle('active');
+
+            // Animate hamburger icon
+            const spans = mobileMenuToggle.querySelectorAll('span');
+            if (mainNav.classList.contains('active')) {
+                spans[0].style.transform = 'rotate(45deg) translateY(10px)';
+                spans[1].style.opacity = '0';
+                spans[2].style.transform = 'rotate(-45deg) translateY(-10px)';
+            } else {
+                spans[0].style.transform = 'none';
+                spans[1].style.opacity = '1';
+                spans[2].style.transform = 'none';
+            }
+        }
+    });
+
+    // Update on window resize
+    window.addEventListener('resize', () => {
+        if (isMobile()) {
+            mainNav.classList.add('active');
         } else {
+            mainNav.classList.remove('active');
+            const spans = mobileMenuToggle.querySelectorAll('span');
             spans[0].style.transform = 'none';
             spans[1].style.opacity = '1';
             spans[2].style.transform = 'none';
         }
     });
 }
+
+// Mobile Follow Us dropdown toggle
+document.addEventListener('DOMContentLoaded', () => {
+    const navFollow = document.querySelector('.nav-follow');
+    const navFollowLink = navFollow?.querySelector('a');
+    
+    // Check if we're on mobile (screen width <= 768px)
+    const isMobile = () => window.innerWidth <= 768;
+    
+    if (navFollowLink) {
+        navFollowLink.addEventListener('click', (e) => {
+            if (isMobile()) {
+                e.preventDefault();
+                const menu = navFollow.querySelector('.nav-follow-menu');
+                if (menu) {
+                    menu.classList.toggle('active');
+                }
+            }
+        });
+    }
+    
+    // Close dropdown when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+        if (isMobile() && navFollow && !navFollow.contains(e.target)) {
+            const menu = navFollow.querySelector('.nav-follow-menu');
+            if (menu) {
+                menu.classList.remove('active');
+            }
+        }
+    });
+
+    // Enhanced horizontal scrolling for mobile menu
+    const navList = document.querySelector('.nav-list');
+    if (navList && isMobile()) {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        navList.addEventListener('mousedown', (e) => {
+            isDown = true;
+            navList.style.cursor = 'grabbing';
+            startX = e.pageX - navList.offsetLeft;
+            scrollLeft = navList.scrollLeft;
+        });
+
+        navList.addEventListener('mouseleave', () => {
+            isDown = false;
+            navList.style.cursor = 'grab';
+        });
+
+        navList.addEventListener('mouseup', () => {
+            isDown = false;
+            navList.style.cursor = 'grab';
+        });
+
+        navList.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - navList.offsetLeft;
+            const walk = (x - startX) * 2;
+            navList.scrollLeft = scrollLeft - walk;
+        });
+
+        // Touch support for mobile
+        let touchStartX = 0;
+        let touchScrollLeft = 0;
+
+        navList.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].pageX - navList.offsetLeft;
+            touchScrollLeft = navList.scrollLeft;
+        });
+
+        navList.addEventListener('touchmove', (e) => {
+            if (!e.touches.length) return;
+            const x = e.touches[0].pageX - navList.offsetLeft;
+            const walk = (x - touchStartX) * 1.5;
+            navList.scrollLeft = touchScrollLeft - walk;
+        });
+
+        // Set cursor style
+        navList.style.cursor = 'grab';
+    }
+});
 
 // Smooth Scrolling for Anchor Links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -114,23 +220,71 @@ window.addEventListener('scroll', () => {
 // Add transition to header
 header.style.transition = 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out';
 
-// Load More Button
-const loadMoreBtn = document.querySelector('.load-more .btn');
+// Load More Button - Show remaining products
+const loadMoreBtn = document.getElementById('loadMoreBtn');
+const loadMoreContainer = document.getElementById('loadMoreContainer');
+
 if (loadMoreBtn) {
     loadMoreBtn.addEventListener('click', () => {
+        // Get all hidden products (those with product-hidden class and display:none)
+        const allHiddenProducts = document.querySelectorAll('.product-card.product-hidden');
+        const hiddenProducts = Array.from(allHiddenProducts).filter(product => {
+            // Only include products that are hidden by our logic, not by price filtering
+            // If it has display:none but is part of the filtered set, include it
+            return true;
+        });
+        
+        if (hiddenProducts.length === 0) {
+            // No more products to show
+            if (loadMoreContainer) {
+                loadMoreContainer.style.display = 'none';
+            }
+            return;
+        }
+
         // Add loading animation
         const originalText = loadMoreBtn.textContent;
         loadMoreBtn.textContent = 'Loading...';
         loadMoreBtn.style.opacity = '0.7';
         loadMoreBtn.style.cursor = 'not-allowed';
+        loadMoreBtn.disabled = true;
 
-        // Simulate loading
+        // Show hidden products with animation
         setTimeout(() => {
-            loadMoreBtn.textContent = originalText;
-            loadMoreBtn.style.opacity = '1';
-            loadMoreBtn.style.cursor = 'pointer';
-            alert('No more products to load!');
-        }, 1000);
+            hiddenProducts.forEach((product, index) => {
+                setTimeout(() => {
+                    product.classList.remove('product-hidden');
+                    product.style.display = ''; // Reset display to show the product
+                    product.style.opacity = '0';
+                    product.style.transform = 'translateY(20px)';
+                    product.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    
+                    // Trigger reflow
+                    product.offsetHeight;
+                    
+                    // Animate in
+                    product.style.opacity = '1';
+                    product.style.transform = 'translateY(0)';
+                }, index * 50); // Stagger animation
+            });
+
+            // Check if there are more products to show
+            setTimeout(() => {
+                const remainingHidden = document.querySelectorAll('.product-card.product-hidden');
+                if (remainingHidden.length === 0) {
+                    // Hide load more button if all products are shown
+                    if (loadMoreContainer) {
+                        loadMoreContainer.style.display = 'none';
+                    }
+                } else {
+                    // Reset button
+                    loadMoreBtn.textContent = originalText;
+                    loadMoreBtn.style.opacity = '1';
+                    loadMoreBtn.style.cursor = 'pointer';
+                    loadMoreBtn.disabled = false;
+                }
+            }, hiddenProducts.length * 50 + 300);
+        }, 300);
     });
 }
 
@@ -228,20 +382,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (filterPrice) {
         const productCards = document.querySelectorAll('.product-card[data-price]');
-        let foundCount = 0;
+        let visibleCount = 0;
+        const matchingProducts = [];
 
+        // First, collect all matching products
         productCards.forEach(card => {
             const price = card.getAttribute('data-price');
             if (price === filterPrice) {
-                card.style.display = ''; // Reset to default (show)
-                foundCount++;
+                matchingProducts.push(card);
             } else {
-                card.style.display = 'none'; // Hide
+                // Hide cards that don't match the price filter completely
+                card.style.display = 'none';
+                card.classList.add('product-hidden');
             }
         });
 
+        // Show first 9 matching products, hide the rest
+        matchingProducts.forEach((card, index) => {
+            if (index < 9) {
+                card.style.display = '';
+                card.classList.remove('product-hidden');
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+                card.classList.add('product-hidden');
+            }
+        });
+
+        // Show/hide load more button based on filtered results
+        const hiddenFilteredProducts = matchingProducts.filter((card, index) => index >= 9);
+        const loadMoreContainer = document.getElementById('loadMoreContainer');
+        if (hiddenFilteredProducts.length > 0 && loadMoreContainer) {
+            loadMoreContainer.style.display = 'block';
+        } else if (loadMoreContainer) {
+            loadMoreContainer.style.display = 'none';
+        }
+
         // Scroll to products if filtered
-        if (foundCount > 0) {
+        if (matchingProducts.length > 0) {
             const productsSection = document.querySelector('.product-grid') || document.querySelector('#reels-bundle');
             if (productsSection) {
                 // Small delay to ensure layout matches
@@ -249,6 +427,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     productsSection.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
             }
+        }
+    } else {
+        // No price filter - ensure load more works with default 9 products
+        const hiddenProducts = document.querySelectorAll('.product-card.product-hidden');
+        const loadMoreContainer = document.getElementById('loadMoreContainer');
+        if (hiddenProducts.length > 0 && loadMoreContainer) {
+            loadMoreContainer.style.display = 'block';
+        } else if (loadMoreContainer) {
+            loadMoreContainer.style.display = 'none';
         }
     }
 });

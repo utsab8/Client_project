@@ -124,24 +124,33 @@
                     </div>
 
                     <!-- Price Summary -->
+                    {% if product %}
                     <div class="price-summary">
+                        {% if product.original_price and product.original_price > product.price %}
                         <div class="price-row">
-                            <span>Subtotal</span>
-                            <span style="text-decoration: line-through;">&#8377;{{ product.original_price|default:product.price }}</span>
+                            <span>Original Price</span>
+                            <span style="text-decoration: line-through; color: #999;">&#8377;{{ product.original_price }}</span>
                         </div>
                         <div class="price-row">
                             <span>Discount</span>
-                            {% if product.discount_percentage > 0 %}
-                            <span style="color: #4caf50;">{{ product.discount_percentage }}% OFF</span>
-                            {% else %}
-                            <span style="color: #4caf50;">No discount</span>
-                            {% endif %}
+                            <span style="color: #4caf50; font-weight: 600;">{{ product.discount_percentage }}% OFF</span>
                         </div>
-                        <div class="total-row">
-                            <span>Total Amount</span>
+                        {% else %}
+                        <div class="price-row">
+                            <span>Subtotal</span>
                             <span>&#8377;{{ product.price }}</span>
                         </div>
+                        <div class="price-row">
+                            <span>Discount</span>
+                            <span style="color: #4caf50;">No discount</span>
+                        </div>
+                        {% endif %}
+                        <div class="total-row">
+                            <span>Total Amount</span>
+                            <span style="color: #4caf50; font-weight: 700;">&#8377;{{ product.price }}</span>
+                        </div>
                     </div>
+                    {% endif %}
 
                     <!-- Payment Button -->
                     <button type="submit" class="pay-btn">

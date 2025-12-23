@@ -5,13 +5,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{% if product %}{{ product.short_description|default:product.description|truncatewords:20 }}{% else %}Product Details - Skilcart{% endif %}">
+    <meta name="description"
+        content="{% if product %}{{ product.short_description|default:product.description|truncatewords:20 }}{% else %}Product Details - Skilcart{% endif %}">
     <title>{% if product %}{{ product.name }} - Skilcart{% else %}Product Details - Skilcart{% endif %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -71,8 +71,8 @@
                     {% elif product %}
                     <!-- Breadcrumb -->
                     <nav class="breadcrumb">
-                        <a href="/">Home</a> &gt; 
-                        <a href="/#reels-bundle">Reels Bundle</a> &gt; 
+                        <a href="/">Home</a> &gt;
+                        <a href="/#reels-bundle">Reels Bundle</a> &gt;
                         <span>{{ product.name }}</span>
                     </nav>
 
@@ -87,22 +87,30 @@
                     <!-- Product Image -->
                     <div class="product-featured-image">
                         {% if product.image %}
-                            <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: auto; border-radius: 8px;">
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                            style="width: 100%; height: auto; border-radius: 8px;">
                         {% elif product.image_url %}
-                            <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 100%; height: auto; border-radius: 8px;">
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}"
+                            style="width: 100%; height: auto; border-radius: 8px;">
                         {% else %}
-                            <div class="product-banner-placeholder" style="background: linear-gradient(135deg, #1dbf73, #003a12); color: white; display: flex; align-items: center; justify-content: center; height: 400px; font-size: 2rem; font-weight: 700; border-radius: 8px;">
-                                {{ product.name }}
-                            </div>
+                        <div class="product-banner-placeholder"
+                            style="background: linear-gradient(135deg, #1dbf73, #003a12); color: white; display: flex; align-items: center; justify-content: center; height: 400px; font-size: 2rem; font-weight: 700; border-radius: 8px;">
+                            {{ product.name }}
+                        </div>
                         {% endif %}
                     </div>
 
                     <!-- Action Bar (Price + Download) -->
                     <div class="product-action-bar">
                         <div class="product-price-info">
+                            {% if product.original_price and product.original_price > product.price %}
+                            <div class="product-price" style="color: #4caf50; font-size: 2rem; font-weight: 700;">&#8377;{{ product.price }}</div>
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem;">
+                                <span style="text-decoration: line-through; color: #999; font-size: 1.2rem;">&#8377;{{ product.original_price }}</span>
+                                <span class="product-discount" style="background: #ff4444; color: white; padding: 0.3rem 0.8rem; border-radius: 6px; font-weight: 600;">{{ product.discount_percentage }}% OFF</span>
+                            </div>
+                            {% else %}
                             <div class="product-price">&#8377;{{ product.price }}</div>
-                            {% if product.discount_percentage > 0 %}
-                            <div class="product-discount">{{ product.discount_percentage }}% OFF</div>
                             {% endif %}
                         </div>
                         <a href="/checkout.html?slug={{ product.slug }}" class="product-download-btn">
@@ -114,7 +122,7 @@
                     <div class="product-description">
                         <h2>About This Bundle</h2>
                         <p>{{ product.description|linebreaks }}</p>
-                        
+
                         {% if product.what_included %}
                         <h3>What's Included:</h3>
                         <ul>
@@ -123,7 +131,7 @@
                             {% endfor %}
                         </ul>
                         {% endif %}
-                        
+
                         {% if product.features %}
                         <h3>Key Benefits:</h3>
                         <ul>
@@ -132,7 +140,7 @@
                             {% endfor %}
                         </ul>
                         {% endif %}
-                        
+
                         {% if product.perfect_for %}
                         <h3>Perfect For:</h3>
                         <ul>
@@ -141,7 +149,7 @@
                             {% endfor %}
                         </ul>
                         {% endif %}
-                        
+
                         <h3>How It Works:</h3>
                         <ol>
                             <li>Click the "Download Now" button</li>
@@ -149,8 +157,9 @@
                             <li>Get instant access to all reels</li>
                             <li>Start posting and growing your audience!</li>
                         </ol>
-                        
-                        <p><strong>Note:</strong> This is a digital product. You will receive download links immediately after purchase.</p>
+
+                        <p><strong>Note:</strong> This is a digital product. You will receive download links immediately
+                            after purchase.</p>
                     </div>
                     {% else %}
                     <!-- Loading State -->
@@ -168,13 +177,15 @@
                     <div class="sidebar-widget pricing-widget">
                         <h3>Get This Bundle</h3>
                         <div class="sidebar-price">
+                            {% if product.original_price and product.original_price > product.price %}
+                            <span class="price-current" style="color: #4caf50; font-size: 1.8rem; font-weight: 700;">&#8377;{{ product.price }}</span>
+                            <span class="price-original" style="text-decoration: line-through; color: #999; font-size: 1.2rem; display: block; margin-top: 0.5rem;">&#8377;{{ product.original_price }}</span>
+                            {% else %}
                             <span class="price-current">&#8377;{{ product.price }}</span>
-                            {% if product.original_price %}
-                            <span class="price-original">&#8377;{{ product.original_price }}</span>
                             {% endif %}
                         </div>
                         {% if product.discount_percentage > 0 %}
-                        <div class="sidebar-discount">{{ product.discount_percentage }}% OFF - Limited Time!</div>
+                        <div class="sidebar-discount" style="background: #ff4444; color: white; padding: 0.5rem; border-radius: 6px; text-align: center; font-weight: 600; margin: 1rem 0;">{{ product.discount_percentage }}% OFF - Limited Time!</div>
                         {% endif %}
                         <a href="/checkout.html?slug={{ product.slug }}" class="sidebar-download-btn">
                             &#127775; Download Now
@@ -254,22 +265,21 @@
 
     <!-- Original Script -->
     <script src="{% static 'js/script.js' %}"></script>
-    
+
     {% if product %}
     <!-- Store product data for JavaScript if needed -->
     <script>
         // Product data available for any JavaScript interactions
         window.productData = {
-            id: {{ product.id }},
-            slug: '{{ product.slug }}',
-            name: '{{ product.name|escapejs }}',
-            price: {{ product.price }},
-            originalPrice: {{ product.original_price|default:product.price }},
-            discountPercentage: {{ product.discount_percentage }}
+            id: "{{ product.id }}",
+            slug: "{{ product.slug }}",
+            name: "{{ product.name|escapejs }}",
+            price: "{{ product.price }}",
+            originalPrice: "{{ product.original_price|default:product.price }}",
+            discountPercentage: "{{ product.discount_percentage }}"
         };
     </script>
     {% endif %}
 </body>
 
 </html>
-

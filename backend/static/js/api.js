@@ -514,32 +514,20 @@ async function handleCheckoutForm(formElement, productSlug) {
             submitBtn.disabled = true;
             submitBtn.style.opacity = '0.8';
 
-            // Create order
-            const orderData = {
-                email: email,
-                phone: phone,
-                customer_name: '',
-                product: product.id,
-                quantity: 1,
-                bump_offer_added: bumpOfferAdded,
-                bump_offer_price: bumpOfferPrice,
-            };
-
-            const order = await api.createOrder(orderData);
+            // Redirect to payment page with order details
+            const paymentUrl = new URL('/payment.html', window.location.origin);
+            paymentUrl.searchParams.set('slug', productSlug);
+            paymentUrl.searchParams.set('email', email);
+            paymentUrl.searchParams.set('phone', phone);
+            if (bumpOfferAdded) {
+                paymentUrl.searchParams.set('bump_offer', 'true');
+            }
             
-            // Store order ID
-            window.lastOrderId = order.id;
+            // Redirect to payment page
+            window.location.href = paymentUrl.toString();
             
-            // Show success message
-            alert(`Order created successfully!\nOrder ID: ${order.id}\nTotal: ₹${totalAmount}\n\nYou will be redirected to payment gateway...`);
-            
-            // Here you would typically redirect to payment gateway
-            // Example: window.location.href = `payment-gateway-url?order_id=${order.id}&amount=${totalAmount}`;
-            
-            // For now, just reset the form
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-            submitBtn.style.opacity = '1';
+            // Stop execution here as we're redirecting
+            return;
             
         } catch (error) {
             console.error('Error creating order:', error);

@@ -1,7 +1,7 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import Http404
 
-from api.models import Product, Category, Tag
+from api.models import Product, Category, Tag, Order, SiteSettings
 
 def index(request):
     """Homepage view - Fully dynamic"""
@@ -108,5 +108,94 @@ def checkout(request):
     }
     
     return render(request, 'checkout.html', context)
+
+def payment(request):
+    """Payment page view - Fully dynamic"""
+    # Get order/product data from URL parameters
+    product_slug = request.GET.get('slug') or request.GET.get('product')
+    email = request.GET.get('email', '')
+    phone = request.GET.get('phone', '')
+    bump_offer = request.GET.get('bump_offer', 'false').lower() == 'true'
+    
+    if not product_slug:
+        # If no slug provided, redirect to homepage
+        from django.shortcuts import redirect
+        return redirect('index')
+    
+    # Get product from database
+    try:
+        product_obj = get_object_or_404(Product, slug=product_slug, is_active=True)
+    except Http404:
+        # Product not found
+        return render(request, 'payment.html', {
+            'error': 'Product not found',
+            'product': None
+        })
+    
+    # Calculate total amount
+    total_amount = float(product_obj.price)
+    bump_offer_price = 0
+    if bump_offer:
+        bump_offer_price = 99
+        total_amount += bump_offer_price
+    
+    settings_obj, _ = SiteSettings.objects.get_or_create(pk=1)
+
+    context = {
+        'product': product_obj,
+        'email': email,
+        'phone': phone,
+        'bump_offer': bump_offer,
+        'bump_offer_price': bump_offer_price,
+        'total_amount': total_amount,
+        'subtotal': float(product_obj.price),
+        'site_settings': settings_obj,
+    }
+    
+    return render(request, 'payment.html', context)
+
+def success(request):
+    """Order success page view - Fully dynamic"""
+    # Get order ID from URL parameter
+    order_id = request.GET.get('order_id')
+    
+    if order_id:
+        # Get order from database
+        try:
+            order = get_object_or_404(Order, id=order_id)
+        except Http404:
+            return render(request, 'success.html', {
+                'error': 'Order not found',
+                'order': None
+            })
+    else:
+        # If no order_id, try to get from session or show generic success
+        # For now, show a message to check email
+        return render(request, 'success.html', {
+            'order': None,
+            'message': 'Your order has been placed successfully! Please check your email for order details.'
+        })
+    
+    context = {
+        'order': order,
+        'product': order.product,
+    }
+    
+    return render(request, 'success.html', context)
+
+
+def privacy_policy(request):
+    settings_obj, _ = SiteSettings.objects.get_or_create(pk=1)
+    return render(request, 'privacy.html', {'site_settings': settings_obj})
+
+
+def terms_conditions(request):
+    settings_obj, _ = SiteSettings.objects.get_or_create(pk=1)
+    return render(request, 'terms.html', {'site_settings': settings_obj})
+
+
+def refund_policy(request):
+    settings_obj, _ = SiteSettings.objects.get_or_create(pk=1)
+    return render(request, 'refund.html', {'site_settings': settings_obj})
 
 

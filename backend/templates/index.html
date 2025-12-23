@@ -72,7 +72,7 @@
             <div class="hero-slider-track">
                 <!-- Slide 1 -->
                 <article class="hero-card">
-                    <div class="hero-card-media">
+                    <div class="hero-card-media" style="background-image: url('https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&auto=format&fit=crop');">
                         <div class="hero-card-overlay">
                             <h2 class="hero-card-kicker">WE ARE</h2>
                             <h3 class="hero-card-title">
@@ -89,7 +89,7 @@
 
                 <!-- Slide 2 -->
                 <article class="hero-card">
-                    <div class="hero-card-media">
+                    <div class="hero-card-media" style="background-image: url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop');">
                         <div class="hero-card-overlay">
                             <h2 class="hero-card-kicker">WE ARE</h2>
                             <h3 class="hero-card-title">
@@ -116,19 +116,34 @@
             </div>
             <div class="product-grid" id="productGrid">
                 {% for product in products %}
-                <a href="/product.html?slug={{ product.slug }}" class="product-card" data-product="{{ product.slug }}"
-                    data-price="{{ product.price }}" style="text-decoration: none; color: inherit;">
+                <a href="/product.html?slug={{ product.slug }}" class="product-card {% if forloop.counter > 9 %}product-hidden{% endif %}" 
+                    data-product="{{ product.slug }}"
+                    data-price="{{ product.price }}" 
+                    data-index="{{ forloop.counter }}"
+                    style="text-decoration: none; color: inherit;">
                     <div class="product-image">
                         {% if product.badge_text %}
                         <div class="product-badge">{{ product.badge_text }}</div>
+                        {% endif %}
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                        {% elif product.image_url %}
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                        {% else %}
+                            <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1dbf73, #003a12); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; border-radius: 8px;">
+                                {{ product.name }}
+                            </div>
                         {% endif %}
                     </div>
                     <div class="product-content">
                         <h3 class="product-title">{{ product.name }}</h3>
                         <div class="product-price-row">
+                            {% if product.original_price and product.original_price > product.price %}
+                            <span class="price-amount" style="color: #4caf50; font-weight: 700; font-size: 1.2rem;">&#8377;{{ product.price }}</span>
+                            <span class="price-original" style="text-decoration: line-through; color: #999; font-size: 0.9rem; margin-left: 0.5rem;">&#8377;{{ product.original_price }}</span>
+                            <span class="discount-badge" style="background: #ff4444; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;"><i class="fa-solid fa-tag"></i> {{ product.discount_percentage }}% Off</span>
+                            {% else %}
                             <span class="price-amount">&#8377;{{ product.price }}</span>
-                            {% if product.discount_percentage > 0 %}
-                            <span class="discount-badge"><i class="fa-solid fa-tag"></i> {{ product.discount_percentage }}% Off</span>
                             {% endif %}
                         </div>
                     </div>
@@ -139,9 +154,15 @@
                 </div>
                 {% endfor %}
             </div>
-            <div class="load-more">
-                <button class="btn btn-secondary">Load More</button>
+            {% if products|length > 9 %}
+            <div class="load-more" id="loadMoreContainer" style="display: block;">
+                <button class="btn btn-secondary" id="loadMoreBtn">Load More</button>
             </div>
+            {% else %}
+            <div class="load-more" id="loadMoreContainer" style="display: none;">
+                <button class="btn btn-secondary" id="loadMoreBtn">Load More</button>
+            </div>
+            {% endif %}
         </div>
     </section>
 
@@ -158,12 +179,11 @@
                     <ul>
                         <li><a href="/">Home</a></li>
                         <li><a href="#">About Us</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms &amp; Conditions</a></li>
-                        <li><a href="#">Refund Policy</a></li>
+                        <li><a href="/privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="/terms-and-conditions.html">Terms &amp; Conditions</a></li>
+                        <li><a href="/refund-policy.html">Refund Policy</a></li>
                         <li><a href="#">Contact Us</a></li>
-                        <li><a href="#">Digital Planner 2025</a></li>
-                        <li><a href="#reels-bundle">Reels Bundle</a></li>
+                        
                     </ul>
                 </div>
                 <div class="footer-section">

@@ -4,6 +4,7 @@ Django settings for skillcart_backend project.
 
 from pathlib import Path
 import os
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -170,4 +171,38 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_ALL_ORIGINS = True  # For development only, restrict in production
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Email Configuration
+# Automatically switches between console (development) and SMTP (production) based on environment variables
+
+# Email Backend: 'console' for development, 'smtp' for production
+EMAIL_BACKEND_TYPE = config('EMAIL_BACKEND_TYPE', default='console')  # Options: 'console', 'smtp', 'sendgrid'
+
+if EMAIL_BACKEND_TYPE == 'smtp':
+    # Gmail SMTP Configuration
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+    EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+    EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+    
+elif EMAIL_BACKEND_TYPE == 'sendgrid':
+    # SendGrid SMTP Configuration
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.sendgrid.net'
+    EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+    EMAIL_HOST_USER = 'apikey'  # Always 'apikey' for SendGrid
+    EMAIL_HOST_PASSWORD = config('SENDGRID_API_KEY', default='')
+    
+else:
+    # Development: Console backend (prints emails to console)
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Site Information
+SITE_NAME = config('SITE_NAME', default='Skilcart')
+SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
+SUPPORT_EMAIL = config('SUPPORT_EMAIL', default='support@skilcart.com')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=f'{SITE_NAME} <{SUPPORT_EMAIL}>')
 

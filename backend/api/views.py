@@ -11,6 +11,7 @@ from .serializers import (
     OrderCreateSerializer, OrderDetailSerializer,
     SiteSettingsSerializer
 )
+from .utils import send_order_confirmation_email, send_download_link_email
 
 
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
@@ -120,6 +121,20 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
         
+        # Send order confirmation email
+        try:
+            send_order_confirmation_email(order)
+        except Exception as e:
+            # Log error but don't fail the order creation
+            print(f"Failed to send order confirmation email: {e}")
+        
+        # If order has download link and is completed, send download link email
+        if order.download_link and order.status == 'completed':
+            try:
+                send_download_link_email(order)
+            except Exception as e:
+                print(f"Failed to send download link email: {e}")
+        
         # Return order details
         detail_serializer = OrderDetailSerializer(order, context={'request': request})
         return Response(detail_serializer.data, status=status.HTTP_201_CREATED)
@@ -132,15 +147,32 @@ class OrderViewSet(viewsets.ModelViewSet):
         payment_id = request.data.get('payment_id')
         download_link = request.data.get('download_link')
         
+        old_status = order.status
+        old_download_link = order.download_link
+        
         if new_status:
             order.status = new_status
         if payment_id:
             order.payment_id = payment_id
         if download_link:
             order.download_link = download_link
-            order.download_sent = True
         
         order.save()
+        
+        # Send download link email if download link was added and order is completed
+        if download_link and order.status == 'completed' and not old_download_link:
+            try:
+                send_download_link_email(order)
+            except Exception as e:
+                print(f"Failed to send download link email: {e}")
+        
+        # Send confirmation email if status changed to completed
+        if new_status == 'completed' and old_status != 'completed':
+            try:
+                send_order_confirmation_email(order)
+            except Exception as e:
+                print(f"Failed to send order confirmation email: {e}")
+        
         serializer = OrderDetailSerializer(order, context={'request': request})
         return Response(serializer.data)
 

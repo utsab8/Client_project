@@ -1,0 +1,321 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if product %}Payment - {{ product.name }} | Skilcart{% else %}Payment | Skilcart{% endif %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .payment-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .payment-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 2.5rem;
+        }
+        .payment-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .payment-header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .payment-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+        .order-summary {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .order-summary h3 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        .summary-item-label {
+            color: #666;
+        }
+        .summary-item-value {
+            color: #333;
+            font-weight: 600;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 0;
+            margin-top: 1rem;
+            border-top: 2px solid #333;
+        }
+        .total-row .summary-item-label {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .total-row .summary-item-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .payment-methods {
+            margin-bottom: 2rem;
+        }
+        .payment-methods h3, .upload-section h3 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .qr-card {
+            border: 2px dashed #cbd5ff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            background: #f8f9ff;
+            margin-bottom: 1.5rem;
+        }
+        .qr-card img {
+            width: 220px;
+            height: 220px;
+            object-fit: contain;
+            border-radius: 12px;
+            background: #fff;
+            padding: 0.75rem;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        .qr-note {
+            margin-top: 1rem;
+            color: #555;
+        }
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid #e0e0e0;
+        }
+        .upload-field {
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .upload-field input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            background: white;
+        }
+        .pay-button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 1.25rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .pay-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        .pay-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .help-text {
+            color: #555;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+        }
+        .secure-badge {
+            text-align: center;
+            margin-top: 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .secure-badge i {
+            color: #4caf50;
+            margin-right: 0.5rem;
+        }
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            color: #c33;
+        }
+        .error-message a {
+            color: #667eea;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <div class="payment-card">
+            {% if error %}
+            <div class="error-message">
+                <h2>Product Not Found</h2>
+                <p>{{ error }}</p>
+                <a href="/">Go back to homepage</a>
+            </div>
+            {% elif product %}
+            <!-- Header -->
+            <div class="payment-header">
+                <h1><i class="fa-solid fa-lock"></i> Secure Payment</h1>
+                <p>Complete your purchase securely</p>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h3><i class="fa-solid fa-receipt"></i> Order Summary</h3>
+                <div class="summary-item">
+                    <span class="summary-item-label">Product:</span>
+                    <span class="summary-item-value">{{ product.name }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-item-label">Price:</span>
+                    <span class="summary-item-value">&#8377;{{ product.price }}</span>
+                </div>
+                {% if bump_offer %}
+                <div class="summary-item">
+                    <span class="summary-item-label">Bump Offer:</span>
+                    <span class="summary-item-value">&#8377;{{ bump_offer_price }}</span>
+                </div>
+                {% endif %}
+                <div class="total-row">
+                    <span class="summary-item-label">Total Amount:</span>
+                    <span class="summary-item-value">&#8377;{{ total_amount|floatformat:0 }}</span>
+                </div>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="payment-methods">
+                <h3><i class="fa-solid fa-qrcode"></i> Scan & Pay</h3>
+                <div class="qr-card">
+                    {% if site_settings.payment_qr_default %}
+                        <img src="{{ site_settings.payment_qr_default.url }}" alt="Payment QR (Default)">
+                        <div class="qr-note">
+                            <p>Scan this QR with your banking/UPI app and complete the payment.</p>
+                            <p><strong>After paying, upload the payment screenshot below.</strong></p>
+                        </div>
+                    {% else %}
+                        <p>No payment QR added yet. Please contact support.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="upload-section">
+                <h3><i class="fa-solid fa-upload"></i> Upload Payment Screenshot</h3>
+                <p class="help-text">Please upload a clear screenshot of your payment confirmation. This will be visible in the admin panel for verification.</p>
+                <div class="upload-field">
+                    <input type="file" id="paymentScreenshot" accept="image/*">
+                </div>
+                <button type="button" class="pay-button" id="submitProofButton">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    Submit Payment Proof
+                </button>
+            </div>
+
+            <div class="secure-badge">
+                <i class="fa-solid fa-shield-halved"></i>
+                Your upload is secured with 256-bit SSL encryption
+            </div>
+            {% else %}
+            <div class="error-message">
+                <h2>Invalid Payment Request</h2>
+                <p>Please go back to checkout and try again.</p>
+                <a href="/">Go back to homepage</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const submitButton = document.getElementById('submitProofButton');
+        const screenshotInput = document.getElementById('paymentScreenshot');
+
+        submitButton.addEventListener('click', function() {
+            if (!screenshotInput.files.length) {
+                alert('Please upload your payment screenshot before submitting.');
+                return;
+            }
+
+            const file = screenshotInput.files[0];
+            const maxSizeBytes = 20 * 1024 * 1024; // 20 MB
+            if (file.size > maxSizeBytes) {
+                alert('Screenshot is too large. Please upload a file up to 20 MB.');
+                return;
+            }
+
+            const email = '{{ email|escapejs }}';
+            const phone = '{{ phone|escapejs }}';
+            const bumpOffer = {{ bump_offer|yesno:"true,false" }};
+            const formData = new FormData();
+
+            formData.append('email', email);
+            formData.append('phone', phone);
+            formData.append('product', {{ product.id }});
+            formData.append('quantity', 1);
+            formData.append('bump_offer_added', bumpOffer);
+            formData.append('bump_offer_price', {{ bump_offer_price }});
+            formData.append('payment_screenshot', screenshotInput.files[0]);
+
+            this.disabled = true;
+            this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+
+            fetch('http://localhost:8000/api/orders/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data?.detail || 'Upload failed');
+                }
+                window.location.href = `/success.html?order_id=${data.id}`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Could not submit payment proof. Please try again.');
+                this.disabled = false;
+                this.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Submit Payment Proof';
+            });
+        });
+    </script>
+</body>
+</html>
+
